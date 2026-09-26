@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  Layer Selector - Adobe CEP extension manifest
+
+  ExtensionBundleId  : unique bundle identifier for the extension
+  RequiredRuntime    : CSXS 7.0 => loads on CC 2017 (14.x) and newer; we target
+                       AE 15.0 (CC 2018) and above via the HostList range below.
+  HostList           : AEFT = Adobe After Effects, [15.0,99.9] = CC 2018 -> future
+  MainPath           : the CEP panel HTML entry point
+  ScriptPath         : ExtendScript file auto-loaded into the AE scripting engine
+-->
+<ExtensionManifest ExtensionBundleId="com.nadim3x.layerselector"
+                   ExtensionBundleVersion="1.0.0"
+                   Version="7.0"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ExtensionList>
+        <Extension Id="com.nadim3x.layerselector.panel" Version="1.0.0"/>
+    </ExtensionList>
+
+    <ExecutionEnvironment>
+        <HostList>
+            <!-- AEFT = After Effects. Version range [15.0, 99.9] = CC 2018 and above -->
+            <Host Name="AEFT" Version="[15.0,99.9]"/>
+        </HostList>
+        <LocaleList>
+            <Locale Code="All"/>
+        </LocaleList>
+        <RequiredRuntimeList>
+            <!-- CSXS 7.0 runtime ships with CC 2017+; higher CSXS versions load it fine -->
+            <RequiredRuntime Name="CSXS" Version="7.0"/>
+        </RequiredRuntimeList>
+    </ExecutionEnvironment>
+
+    <DispatchInfoList>
+        <Extension Id="com.nadim3x.layerselector.panel">
+            <DispatchInfo>
+                <Resources>
+                    <!-- CEP front-end (HTML/CSS/JS running in Chromium) -->
+                    <MainPath>./client/index.html</MainPath>
+                    <!-- ExtendScript back-end, auto-loaded into the AE engine -->
+                    <ScriptPath>./host/host.jsx</ScriptPath>
+                    <CEFCommandLine>
+                        <Parameter>--allow-file-access</Parameter>
+                        <Parameter>--allow-file-access-from-files</Parameter>
+                    </CEFCommandLine>
+                </Resources>
+                <Lifecycle>
+                    <AutoVisible>true</AutoVisible>
+                </Lifecycle>
+                <UI>
+                    <!-- Panel type: docks inside the AE workspace -->
+                    <Type>Panel</Type>
+                    <!-- Appears under the Window menu in After Effects -->
+                    <Menu>Layer Selector</Menu>
+                    <Geometry>
+                        <Size>
+                            <Width>320</Width>
+                            <Height>450</Height>
+                        </Size>
+                        <MinSize>
+                            <Width>250</Width>
+                            <Height>300</Height>
+                        </MinSize>
+                    </Geometry>
+                    <Icons>
+                        <Icon Type="Normal">./icons/icon-normal.png</Icon>
+                        <Icon Type="Hover">./icons/icon-hover.png</Icon>
+                        <Icon Type="Disabled">./icons/icon-disabled.png</Icon>
+                    </Icons>
+                </UI>
+            </DispatchInfo>
+        </Extension>
+    </DispatchInfoList>
+</ExtensionManifest>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Layer Selector</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ═══════════════ Header / toolbar ═══════════════ -->
+    <header class="panel-header">
+        <h1>Layer Selector</h1>
+        <button id="refresh-btn" class="icon-btn" title="Re-scan the active composition">&#10227;</button>
+    </header>
+
+    <!-- ═══════════════ Active comp summary ═══════════════ -->
+    <section id="comp-info" class="comp-info">
+        <div id="comp-name" class="comp-name">No active composition</div>
+        <div id="total-count" class="total-count">Total layers: &ndash;</div>
+    </section>
+
+    <!-- ═══════════════ Category buttons (injected by index.js) ═══════════════ -->
+    <section class="section">
+        <h2 class="section-title">Select by Type</h2>
+        <div id="category-grid" class="category-grid"></div>
+    </section>
+
+    <!-- ═══════════════ Global selection utilities ═══════════════ -->
+    <section class="section">
+        <h2 class="section-title">Selection</h2>
+        <div class="utility-row">
+            <button id="select-all-btn" class="util-btn">Select All</button>
+            <button id="deselect-all-btn" class="util-btn">Deselect All</button>
+            <button id="invert-btn" class="util-btn">Invert</button>
+        </div>
+    </section>
+
+    <!-- ═══════════════ Bonus: batch font changer ═══════════════ -->
+    <section class="section">
+        <h2 class="section-title">Text Tools</h2>
+        <p class="hint">Applies to the currently <strong>selected Text layers</strong>.
+            Leave a field blank / unchecked to keep its current value.</p>
+
+        <div class="field">
+            <label for="font-name">Font family</label>
+            <input id="font-name" type="text" list="font-suggestions"
+                   placeholder="e.g. ArialMT, Helvetica-Bold" autocomplete="off">
+            <datalist id="font-suggestions">
+                <option value="ArialMT"></option>
+                <option value="Arial-BoldMT"></option>
+                <option value="Helvetica"></option>
+                <option value="Helvetica-Bold"></option>
+                <option value="TimesNewRomanPSMT"></option>
+                <option value="CourierNewPSMT"></option>
+                <option value="Verdana"></option>
+                <option value="Georgia"></option>
+                <option value="Impact"></option>
+                <option value="TrebuchetMS"></option>
+                <option value="MyriadPro-Regular"></option>
+                <option value="MinionPro-Regular"></option>
+            </datalist>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="font-size">Size (px)</label>
+                <input id="font-size" type="number" min="1" step="1" placeholder="keep">
+            </div>
+            <div class="field">
+                <label for="color-enable">Fill color</label>
+                <div class="color-row">
+                    <input id="color-enable" type="checkbox" title="Enable fill color change">
+                    <input id="font-color" type="color" value="#ffffff" title="New fill color">
+                </div>
+            </div>
+        </div>
+
+        <button id="apply-font-btn" class="accent-btn">Apply to Selected Text Layers</button>
+
+        <!-- Optional preview list powered by getLayerNames() -->
+        <details id="preview-details" class="preview">
+            <summary id="preview-summary">Selected layers preview</summary>
+            <ul id="preview-list" class="preview-list"></ul>
+        </details>
+    </section>
+
+    <!-- ═══════════════ Status bar (auto-clears after 3 s) ═══════════════ -->
+    <footer id="status-bar" class="status-bar">Ready</footer>
+
+    <!-- CEP bridge first, then the panel logic -->
+    <script src="CSInterface.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

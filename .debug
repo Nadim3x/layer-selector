@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  .debug - CEP debug configuration.
+  When PlayerDebugMode is enabled, CEP reads this file and opens a Chrome
+  DevTools debugging port for the panel. Open chrome://inspect in Chrome and
+  add localhost:8092 under "Discover network targets" to debug the panel UI.
+  This file must NOT be shipped in the production .zxp (ZXPSignCmd excludes
+  dot-files by default, so it is left out automatically).
+-->
+<ExtensionList>
+    <Extension Id="com.nadim3x.layerselector.panel">
+        <HostList>
+            <Host Name="AEFT" Port="8092"/>
+        </HostList>
+    </Extension>
+</ExtensionList>
