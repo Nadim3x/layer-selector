@@ -14,6 +14,9 @@ for text layers.
 
 ## Features
 
+- **Ready-to-install `.zxp`** — `dist/LayerSelector.zxp` is a signed, verified
+  package. Install it directly (see [Quick install](#quick-install)) or rebuild
+  it with `tools/make_zxp.py`.
 - **Layer type detection** — categorizes every top-level layer in the active comp:
   Text, Adjustment, Solid, Shape, Camera, Light, Null, Footage and Pre-comp.
 - **Live counts** — total layer count plus a count badge on every category button
@@ -50,11 +53,31 @@ layer-selector/                     (this repo == the extension root)
 │   ├── icon-normal.png             23x23 panel icon (normal)
 │   ├── icon-hover.png              23x23 panel icon (hover)
 │   └── icon-disabled.png           23x23 panel icon (disabled)
+├── tools/
+│   └── make_zxp.py                 Portable signed-.zxp builder + verifier
+├── dist/
+│   └── LayerSelector.zxp           Prebuilt signed package (the deliverable)
 ├── .debug                          CEP debug config (dev only, not for release)
 └── README.md
 ```
 
-Total package size: **~100 KB** — far under the 1 MB budget.
+Total extension size: **~100 KB** — far under the 1 MB budget.
+
+---
+
+## Quick install (prebuilt .zxp)
+
+`dist/LayerSelector.zxp` is a complete signed package (signed with a
+self-signed development certificate):
+
+1. Enable **PlayerDebugMode** — see §1a below (one-time setup).
+2. Install the package — drag `dist/LayerSelector.zxp` into
+   [Anastasiy's Extension Manager](https://install.anastasiy.com) (choose
+   *After Effects*), or run `ExManCmd /install LayerSelector.zxp` — see §3.
+3. Launch After Effects → **Window ▸ Layer Selector**.
+
+To rebuild the `.zxp` after making changes, see §2 (two options: the portable
+Python builder, or Adobe's ZXPSignCmd).
 
 ---
 
@@ -151,9 +174,36 @@ The included `.debug` file opens Chromium remote debugging on **port 8092** for 
 
 ---
 
-## 2. Packaging a signed `.zxp` with ZXPSignCmd
+## 2. Packaging a signed `.zxp`
 
-### 2a. Get ZXPSignCmd
+Two options: **(A)** the portable Python builder included in this repo
+(works on Linux/macOS/Windows/CI, no Adobe tooling needed), or **(B)** Adobe's
+official ZXPSignCmd.
+
+### 2A. Portable builder — `tools/make_zxp.py`
+
+This is how the shipped `dist/LayerSelector.zxp` was produced. It reimplements
+the ZXPSignCmd packaging format exactly (UCF container, `mimetype`,
+`META-INF/signatures.xml` with per-file SHA-256 digests and an RSA-SHA1
+XMLDSig signature), verified byte-for-byte against packages signed by Adobe's
+own tool. Requires only Python 3 and the `openssl` CLI:
+
+```bash
+# create a self-signed dev certificate (only once; NOT committed to git):
+python3 tools/make_zxp.py --make-cert --password mySecretPassword
+
+# build + self-verify dist/LayerSelector.zxp:
+python3 tools/make_zxp.py --password mySecretPassword
+
+# re-check an existing package's digests and signature at any time:
+python3 tools/make_zxp.py --verify dist/LayerSelector.zxp
+```
+
+The certificate is written to `dist/devcert.p12` (git-ignored — never commit
+private keys). The first build creates the certificate automatically if it's
+missing. Want an Adobe-style build instead? Use option B.
+
+### 2B. Get ZXPSignCmd
 
 Adobe's official command-line packager lives in the
 [Adobe-CEP/CEP-Resources](https://github.com/Adobe-CEP/CEP-Resources/tree/master/ZXPSignCMD)
@@ -165,7 +215,7 @@ repository:
   (macOS 14 Sonoma may block the unsigned binary — see the `Readme.md` next to it,
   or run `xattr -d com.apple.quarantine ZXPSignCmd`)
 
-### 2b. Create a self-signed certificate (development)
+### Create a self-signed certificate (development)
 
 ```bash
 ZXPSignCmd -selfSignedCert <CountryCode> <State> <Organization> <CommonName> <Password> cert.p12
@@ -177,7 +227,7 @@ Example:
 ZXPSignCmd -selfSignedCert US NY MyStudio "Layer Selector" mySecretPassword cert.p12
 ```
 
-### 2c. Build the `.zxp`
+### Build the `.zxp`
 
 Stage a clean copy of the extension folder named after the bundle id (no `.git`,
 no `.debug`), then sign it:

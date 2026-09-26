@@ -11,6 +11,11 @@ desktop.ini
 ZXPSignCmd
 ZXPSignCmd.exe
 
+# ...but DO ship the prebuilt package deliverable
+!dist/LayerSelector.zxp
+
+# Python cache
+__pycache__/
+
 # Staging folders
-dist/
 staging/
