@@ -1,0 +1,16 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build / packaging artifacts (never commit certificates!)
+*.zxp
+*.p12
+*.pem
+*.pfx
+ZXPSignCmd
+ZXPSignCmd.exe
+
+# Staging folders
+dist/
+staging/
