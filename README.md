@@ -2,8 +2,8 @@
 
 A complete **Adobe CEP extension for After Effects** that selects layers by type in the
 active composition — Text, Adjustment, Solid, Shape, Camera, Light, Null, Footage and
-Pre-comp — with live per-type counts, one-click selection, and a bonus batch font changer
-for text layers.
+Pre-comp — with live per-type counts, one-click selection, a premium dark/light panel,
+and a batch font changer for text layers.
 
 **Target host:** Adobe After Effects CC 2018 and newer (AEFT 15.0 – 99.9, CSXS 7.0+)
 **Type:** CEP Panel (HTML/CSS/JS front-end + ExtendScript back-end)
@@ -26,11 +26,15 @@ for text layers.
 - **Selection utilities** — Select All, Deselect All and Invert Selection.
 - **Batch font changer** — change font family, font size and fill color on all
   selected text layers at once (blank/unchecked fields keep their current values).
-- **Layer name preview** — after selecting by type, the panel lists the matching
-  layer names and their timeline indices.
+- **Layer browser** — after selecting a type, the panel lists matching layer
+  names, timeline indices and type tags; clicking a row selects only that layer.
+- **Premium panel UI** — compact 38px branded header, outline SVG icons, tinted
+  type cards, live selection badges, a settings popover, and a persisted dark /
+  light theme toggle. The default dark palette uses `#18181b`, `#2a2a2e`,
+  `#cccccc` and `#2563eb` with flat surfaces and no shadows.
 - **Safe** — every change is wrapped in `app.beginUndoGroup()/endUndoGroup()` (undo
   with Ctrl/Cmd+Z), all host responses are parsed in try/catch, rapid clicks are
-  debounced, and locked layers keep their lock state.
+  guarded while a call is in flight, and locked layers keep their lock state.
 
 ---
 
@@ -45,7 +49,7 @@ layer-selector/                     (this repo == the extension root)
 ├── client/
 │   ├── index.html                  Panel UI
 │   ├── index.js                    Panel logic (ES6+, talks to host via CSInterface)
-│   ├── style.css                   Dark theme (#2b2b2b / #ccc / #007acc)
+│   ├── style.css                   Dark/light theme (#18181b / #2a2a2e / #2563eb)
 │   └── CSInterface.js              Adobe's official CEP JS bridge (v11.0.0)
 ├── host/
 │   └── host.jsx                    ExtendScript back-end (ES5, runs in AE)
@@ -92,7 +96,8 @@ Python builder, or Adobe's ZXPSignCmd).
 │    'text')")                │◀────────│  selectAll() / deselectAll() │
 │  ◀── JSON string response ──┼─────────│  invertSelection()           │
 │  JSON.parse in try/catch    │         │  changeFontForSelected(...)  │
-└─────────────────────────────┘         │  getLayerNames(type)         │
+└─────────────────────────────┘         │  selectSingleLayer(index)    │
+     │                                  │  getLayerNames(type)         │
      ▲                                  └──────────────────────────────┘
      │  CSInterface.js (v11.0.0, Adobe)  ◀── loaded via <ScriptPath> in manifest
      └── official CEP bridge
@@ -308,17 +313,20 @@ Every function returns a **JSON string**. All layer changes are undoable.
 
 | Function | Purpose | Success payload |
 |---|---|---|
-| `getLayerCounts()` | Scan active comp | `{ok, hasComp, compName, total, counts:{text, adjustment, solid, shape, camera, light, null, footage, precomp}}` |
+| `getLayerCounts()` | Scan active comp and current selection | `{ok, hasComp, compName, total, selected, selectedText, counts:{text, adjustment, solid, shape, camera, light, null, footage, precomp}}` |
 | `selectLayersByType(type)` | Deselect all, select only `type` | `{ok, message:"12 layer(s) selected", count}` |
 | `selectAll()` | Select every layer | `{ok, message, count}` |
 | `deselectAll()` | Clear selection | `{ok, message, count:0}` |
 | `invertSelection()` | Flip every layer's selected state | `{ok, message, count}` |
 | `changeFontForSelected(fontName, fontSize, hexColor)` | Batch style selected **Text** layers; pass `""` to keep any value | `{ok, message, count, failed}` |
-| `getLayerNames(type)` *(optional preview)* | List matching layers | `{ok, type, count, layers:[{index, name}]}` |
+| `selectSingleLayer(index)` | Deselect all and select one 1-based timeline layer | `{ok, message, count:1, index, name}` |
+| `getLayerNames(type)` | List matching layers for the browser card | `{ok, type, count, layers:[{index, name, selected}]}` |
 
 Failure payload: `{ok:false, message:"…"}` with a human-readable reason
 (`No active composition…`, `Active item is not a composition…`,
-`Composition has no layers`, `Unknown layer type: …`, …).
+`Composition has no layers.`, `Unknown layer type: …`, …). An empty composition
+also includes `hasComp:true`, `empty:true`, its `compName`, zero counts, and
+remains visible in the panel while layer actions are disabled.
 
 ### Detection rules
 
@@ -354,11 +362,12 @@ Failure payload: `{ok:false, message:"…"}` with a human-readable reason
 - **Category buckets** — audio-only layers count as *Footage*; anything the
   model doesn't recognize also falls into *Footage*. Camera/Light are matched by
   class, so light *types* (spot/point/parallel/ambient) are not distinguished.
-- **Auto-refresh triggers** — counts refresh on panel open, on window focus,
-  after every panel action, and via the ⟳ button. If you restructure the comp in
-  AE while the panel keeps focus, click ⟳ to re-scan.
+- **Auto-refresh triggers** — counts and the current layer list refresh on panel
+  open, on window focus, after every panel action, and via the ⟳ button. If you
+  restructure the comp in AE while the panel keeps focus, click ⟳ to re-scan.
+  Auto-refresh can be disabled from the gear popover.
 - **Requires AE CC 2018+** (host range `[15.0,99.9]` in the manifest).
-- **Self-signed `.zxp`s need PlayerDebugMode** on the target machine (see §2).
+- **Self-signed `.zxp`s need PlayerDebugMode** on the target machine (see §1a).
 
 ---
 

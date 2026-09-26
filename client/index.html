@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,85 +8,103 @@
 </head>
 <body>
 
-    <!-- ═══════════════ Header / toolbar ═══════════════ -->
+    <!-- ═══════════════ Header (38px) ═══════════════ -->
     <header class="panel-header">
-        <h1>Layer Selector</h1>
-        <button id="refresh-btn" class="icon-btn" title="Re-scan the active composition">&#10227;</button>
+        <div class="brand">
+            <div class="app-icon" id="app-icon" title="Layer Selector"></div>
+            <span class="brand-name">Layer Selector</span>
+        </div>
+        <div class="header-actions">
+            <button id="theme-btn" class="ghost-btn" title="Toggle light / dark theme"></button>
+            <button id="settings-btn" class="ghost-btn" title="Settings"></button>
+            <button id="refresh-btn" class="ghost-btn" title="Re-scan the active composition"></button>
+        </div>
+        <!-- settings popover -->
+        <div id="settings-popover" class="settings-popover" hidden>
+            <label class="settings-row">
+                <input type="checkbox" id="autorefresh-toggle" checked>
+                <span>Auto-refresh on focus</span>
+            </label>
+            <div class="settings-version">Layer Selector 1.0.0</div>
+        </div>
     </header>
 
-    <!-- ═══════════════ Active comp summary ═══════════════ -->
-    <section id="comp-info" class="comp-info">
-        <div id="comp-name" class="comp-name">No active composition</div>
-        <div id="total-count" class="total-count">Total layers: &ndash;</div>
-    </section>
+    <!-- ═══════════════ Scrollable body ═══════════════ -->
+    <main class="panel-body">
 
-    <!-- ═══════════════ Category buttons (injected by index.js) ═══════════════ -->
-    <section class="section">
-        <h2 class="section-title">Select by Type</h2>
+        <!-- Composition info card -->
+        <section class="comp-card">
+            <div class="comp-text">
+                <div id="comp-name" class="comp-name">No active composition</div>
+                <div id="comp-sub" class="comp-sub">Open a composition to begin</div>
+            </div>
+            <div id="total-badge" class="pill pill-blue">&ndash; layers</div>
+        </section>
+
+        <!-- Select by Type -->
+        <div class="section-label">Select by Type</div>
         <div id="category-grid" class="category-grid"></div>
-    </section>
 
-    <!-- ═══════════════ Global selection utilities ═══════════════ -->
-    <section class="section">
-        <h2 class="section-title">Selection</h2>
-        <div class="utility-row">
+        <!-- Selection utilities -->
+        <div class="section-label">Selection</div>
+        <div class="selection-row">
             <button id="select-all-btn" class="util-btn">Select All</button>
-            <button id="deselect-all-btn" class="util-btn">Deselect All</button>
+            <button id="deselect-all-btn" class="util-btn danger">Deselect All</button>
             <button id="invert-btn" class="util-btn">Invert</button>
         </div>
-    </section>
 
-    <!-- ═══════════════ Bonus: batch font changer ═══════════════ -->
-    <section class="section">
-        <h2 class="section-title">Text Tools</h2>
-        <p class="hint">Applies to the currently <strong>selected Text layers</strong>.
-            Leave a field blank / unchecked to keep its current value.</p>
-
-        <div class="field">
-            <label for="font-name">Font family</label>
-            <input id="font-name" type="text" list="font-suggestions"
-                   placeholder="e.g. ArialMT, Helvetica-Bold" autocomplete="off">
-            <datalist id="font-suggestions">
-                <option value="ArialMT"></option>
-                <option value="Arial-BoldMT"></option>
-                <option value="Helvetica"></option>
-                <option value="Helvetica-Bold"></option>
-                <option value="TimesNewRomanPSMT"></option>
-                <option value="CourierNewPSMT"></option>
-                <option value="Verdana"></option>
-                <option value="Georgia"></option>
-                <option value="Impact"></option>
-                <option value="TrebuchetMS"></option>
-                <option value="MyriadPro-Regular"></option>
-                <option value="MinionPro-Regular"></option>
-            </datalist>
-        </div>
-
-        <div class="field-row">
-            <div class="field">
-                <label for="font-size">Size (px)</label>
-                <input id="font-size" type="number" min="1" step="1" placeholder="keep">
-            </div>
-            <div class="field">
-                <label for="color-enable">Fill color</label>
-                <div class="color-row">
-                    <input id="color-enable" type="checkbox" title="Enable fill color change">
-                    <input id="font-color" type="color" value="#ffffff" title="New fill color">
+        <!-- Text Tools card -->
+        <section class="tool-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span id="t-icon" class="t-icon"></span>
+                    <span>Text Tools</span>
                 </div>
+                <div id="selected-text-badge" class="pill pill-gray">&ndash; selected</div>
             </div>
-        </div>
+            <div class="card-desc">
+                Applies to the currently <strong>selected Text layers</strong>.
+                Leave a field blank to keep its current value.
+            </div>
+            <div class="card-body">
+                <div class="field">
+                    <label for="font-name">Font family</label>
+                    <input id="font-name" type="text" placeholder="e.g. ArialMT, Helvetica-Bold" autocomplete="off">
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="font-size">Size (px)</label>
+                        <input id="font-size" type="number" min="1" step="1" placeholder="keep">
+                    </div>
+                    <div class="field">
+                        <label>Fill color</label>
+                        <div class="color-row">
+                            <button id="swatch-white" class="swatch swatch-white" title="White (#ffffff)"></button>
+                            <input id="font-color" type="color" class="swatch swatch-picker" value="#2563eb" title="Pick a fill color">
+                            <span id="color-state" class="keep-text">keep</span>
+                        </div>
+                    </div>
+                </div>
+                <button id="apply-font-btn" class="accent-btn">Apply to Selected Text Layers</button>
+            </div>
+        </section>
 
-        <button id="apply-font-btn" class="accent-btn">Apply to Selected Text Layers</button>
+        <!-- Layer list card -->
+        <section class="tool-card">
+            <div class="card-header">
+                <div id="list-title" class="card-title">Text Layers</div>
+                <div id="list-count" class="pill pill-gray">0</div>
+            </div>
+            <div id="layer-list" class="layer-list"></div>
+        </section>
 
-        <!-- Optional preview list powered by getLayerNames() -->
-        <details id="preview-details" class="preview">
-            <summary id="preview-summary">Selected layers preview</summary>
-            <ul id="preview-list" class="preview-list"></ul>
-        </details>
-    </section>
+    </main>
 
-    <!-- ═══════════════ Status bar (auto-clears after 3 s) ═══════════════ -->
-    <footer id="status-bar" class="status-bar">Ready</footer>
+    <!-- ═══════════════ Status bar ═══════════════ -->
+    <footer class="status-bar">
+        <span id="status-dot" class="status-dot"></span>
+        <span id="status-text">Ready</span>
+    </footer>
 
     <!-- CEP bridge first, then the panel logic -->
     <script src="CSInterface.js"></script>

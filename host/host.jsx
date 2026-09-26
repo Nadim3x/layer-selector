@@ -333,13 +333,15 @@ function lsHexToRgb(hex) {
 
 /**
  * getLayerCounts()
- * Scan the active composition and report the layer count per category.
+ * Scan the active composition and report the layer count per category,
+ * plus how many layers (and TextLayers) are currently selected.
  * @returns {String} JSON:
- *   success: { ok:true, hasComp:true, compName, total, counts:{text:n, ...} }
+ *   success: { ok:true, hasComp:true, compName, total, selected, selectedText,
+ *              counts:{text:n, ...} }
  *   failure: { ok:false, hasComp:false, message }
  */
 function getLayerCounts() {
-    var comp, counts, i, total, type, err;
+    var comp, counts, i, total, type, selected, selectedText, err;
     try {
         comp = lsGetActiveComp();
         if (!comp) {
@@ -357,15 +359,36 @@ function getLayerCounts() {
             precomp: 0
         };
         total = comp.numLayers;
+        selected = 0;
+        selectedText = 0;
+        if (total === 0) {
+            return lsFail("Composition has no layers.", {
+                hasComp: true,
+                empty: true,
+                compName: comp.name,
+                total: 0,
+                selected: 0,
+                selectedText: 0,
+                counts: counts
+            });
+        }
         for (i = 1; i <= total; i++) {
             type = lsDetectLayerType(comp.layer(i));
             counts[type] = counts[type] + 1;
+            if (comp.layer(i).selected) {
+                selected++;
+                if (type === "text") {
+                    selectedText++;
+                }
+            }
         }
         return lsToJson({
             ok: true,
             hasComp: true,
             compName: comp.name,
             total: total,
+            selected: selected,
+            selectedText: selectedText,
             counts: counts
         });
     } catch (err) {
@@ -602,11 +625,47 @@ function changeFontForSelected(fontName, fontSize, hexColor) {
 }
 
 /**
+ * selectSingleLayer(index)
+ * Deselect everything, then select only the layer at the given timeline
+ * position (1-based, index 1 = topmost). Used by the panel's layer list.
+ * @param {Number|String} index 1-based layer index in the active comp
+ * @returns {String} JSON { ok, message, count, index, name }
+ */
+function selectSingleLayer(index) {
+    var comp, layer, err;
+    try {
+        comp = lsGetActiveComp();
+        if (!comp) {
+            return lsNoCompResponse();
+        }
+        index = parseInt(index, 10);
+        if (isNaN(index) || index < 1 || index > comp.numLayers) {
+            return lsFail("Layer index out of range: " + String(index));
+        }
+        app.beginUndoGroup("Layer Selector: Select Layer");
+        try {
+            lsDeselectAllLayers(comp);
+            layer = comp.layer(index);
+            lsSetSelected(layer, true);
+        } finally {
+            app.endUndoGroup();
+        }
+        return lsOk("Layer \"" + layer.name + "\" selected", {
+            count: 1,
+            index: index,
+            name: layer.name
+        });
+    } catch (err) {
+        return lsFail("Error selecting layer: " + String(err));
+    }
+}
+
+/**
  * getLayerNames(type)  [optional preview feature]
  * List the layers of a given category in the active composition.
  * Only top-level layers of the active comp are returned (index 1 = topmost).
  * @param {String} type one of the supported category keys
- * @returns {String} JSON { ok, type, count, layers:[{index, name}] }
+ * @returns {String} JSON { ok, type, count, layers:[{index, name, selected}] }
  */
 function getLayerNames(type) {
     var comp, i, layers, err;
@@ -621,7 +680,11 @@ function getLayerNames(type) {
         layers = [];
         for (i = 1; i <= comp.numLayers; i++) {
             if (lsDetectLayerType(comp.layer(i)) === type) {
-                layers.push({ index: i, name: comp.layer(i).name });
+                layers.push({
+                    index: i,
+                    name: comp.layer(i).name,
+                    selected: comp.layer(i).selected === true
+                });
             }
         }
         return lsToJson({
